@@ -1,46 +1,35 @@
 /* ... existing styles ... */
 
-/* Claim Status Badge Styles */
-.badge {
-    display: inline-block;
-    padding: 0.5em 0.75em;
-    font-size: 0.85rem;
-    font-weight: 700;
-    line-height: 1;
+/* Home Page Specific Styles */
+html, body {
+    height: 100%;
+}
+
+.home-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh; /* Adjust as needed */
     text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.35rem;
-    text-transform: uppercase;
-    letter-spacing: .5px;
 }
 
-.badge-secondary { /* Draft */
-    color: #fff;
-    background-color: #6c757d;
-}
+    .home-container .display-4 {
+        font-weight: 300;
+    }
 
-.badge-primary { /* Submitted */
-    color: #fff;
-    background-color: #007bff;
-}
+    .home-container .btn {
+        padding: 0.8rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
 
-.badge-info { /* Under Review */
-    color: #fff;
-    background-color: #17a2b8;
-}
+        .home-container .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
 
-.badge-success { /* Approved */
-    color: #fff;
-    background-color: #28a745;
-}
-
-.badge-danger { /* Rejected */
-    color: #fff;
-    background-color: #dc3545;
-}
-
-.badge-light { /* Default */
-    color: #212529;
-    background-color: #f8f9fa;
+.mr-2 {
+    margin-right: 0.5rem;
 }
