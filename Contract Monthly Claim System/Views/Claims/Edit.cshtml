@@ -1,36 +1,103 @@
 ﻿@model Contract_Monthly_Claim_System.Models.Claim
 
-<h2>Claim for @Model.Month/@Model.Year</h2>
+@{
+    ViewData["Title"] = "Manage Claim";
+    var hourlyRate = ViewBag.HourlyRate;
+}
 
-<button id="clockBtn">Clock In / Out</button>
-<div id="lastSession"></div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Claim for @Model.Month/@Model.Year</h2>
+            <p class="text-muted">Status: <span class="badge badge-primary">@Model.Status</span></p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">Back to My Claims</a>
+    </div>
 
-<table>
-    <thead>
-        <tr><th>Date</th><th>Hours</th><th>Rate</th><th>Amount</th></tr>
-    </thead>
-    <tbody>
-        @foreach (var it in Model.Items)
-        {
-            <tr><td>@it.Date.ToShortDateString()</td><td>@it.Hours</td><td>@it.HourlyRate</td><td>@it.Amount</td></tr>
-        }
-    </tbody>
-</table>
+    <div class="row">
+        <!-- Left Column: Add New Item Form -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Add a Work Item</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddItem" method="post">
+                        <input type="hidden" name="claimId" value="@Model.ClaimId" />
 
-<div>
-    <strong>Total hours:</strong> @Model.TotalHours <br />
-    <strong>Total amount:</strong> @Model.TotalAmount
+                        <div class="form-group mb-3">
+                            <label for="date">Date of Work</label>
+                            <input type="date" id="date" name="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="hours">Hours Worked</label>
+                            <input type="number" id="hours" name="hours" class="form-control" step="0.1" min="0.1" placeholder="e.g., 3.5" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="rate">Hourly Rate</label>
+                            <input type="text" id="rate" name="rate" class="form-control" value="@hourlyRate.ToString("C")" readonly />
+                            <small class="form-text text-muted">Your hourly rate is set on your profile.</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="activityDescription">Notes / Activity Description</label>
+                            <textarea id="activityDescription" name="activityDescription" class="form-control" rows="3" placeholder="e.g., Marking final exams" required></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Item to Claim</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Claim Summary and Submission -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Claim Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Hours</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items.OrderBy(i => i.Date))
+                            {
+                                <tr>
+                                    <td>@item.Date.ToShortDateString()</td>
+                                    <td>@item.Hours</td>
+                                    <td>@item.Amount.ToString("C")</td>
+                                    <td>@item.ActivityDescription</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <hr />
+                    <div class="text-right">
+                        <h4>Total Hours: @Model.TotalHours</h4>
+                        <h3>Total Amount: @Model.TotalAmount.ToString("C")</h3>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <form asp-action="Submit" method="post" onsubmit="return confirm('Are you sure you want to submit this claim? You cannot make changes after submission.');">
+                        <input type="hidden" name="id" value="@Model.ClaimId" />
+                        <button type="submit" class="btn btn-success btn-lg btn-block">
+                            Click Here to Submit Final Claim
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<form asp-action="Upload" asp-controller="Claims" enctype="multipart/form-data" method="post">
-    <input type="hidden" name="id" value="@Model.ClaimId" />
-    <input type="file" name="file" />
-    <button type="submit">Upload supporting doc</button>
-</form>
-
-<form asp-action="Submit" method="post">
-    <input type="hidden" name="id" value="@Model.ClaimId" />
-    <button type="submit">Submit Claim</button>
-</form>
-
-<script src="/js/clock.js"></script>

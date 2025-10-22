@@ -1,26 +1,34 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Contract_Monthly_Claim_System.Models;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
-using Contract_Monthly_Claim_System.Models;
-
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using System;
 
 namespace Contract_Monthly_Claim_System.Controllers
 {
     public class ClaimsController : Controller
     {
         // In-memory stores for prototype
-        private static ConcurrentDictionary<Guid, Claim> Claims = new();
-        private static ConcurrentDictionary<Guid, Lecturer> Lecturers = new();
+        public static ConcurrentDictionary<Guid, Claim> Claims = new();
+        public static ConcurrentDictionary<Guid, Lecturer> Lecturers = new();
 
-        // Seed a lecturer for demo
+        // Seed a lecturer and a draft claim for demonstration
         static ClaimsController()
         {
-            var l = new Lecturer { StaffNumber = "L001", FullName = "Dr. Thabo", Email = "thabo@uni.edu", HourlyRate = 500.00m };
-            Lecturers.TryAdd(l.LecturerId, l);
+            var lecturer = new Lecturer { StaffNumber = "L001", FullName = "Dr. Thabo", Email = "thabo@uni.edu", HourlyRate = 500.00m };
+            Lecturers.TryAdd(lecturer.LecturerId, lecturer);
+
+            var draftClaim = new Claim { LecturerId = lecturer.LecturerId, Month = 10, Year = 2025, Status = ClaimStatus.Draft };
+            draftClaim.Items.Add(new ClaimItem { Date = new DateTime(2025, 10, 5), Hours = 3, HourlyRate = 500, ActivityDescription = "Grading assignments" });
+            Claims.TryAdd(draftClaim.ClaimId, draftClaim);
         }
 
         public IActionResult Index()
         {
-            return View(Claims.Values.OrderByDescending(c => c.SubmittedAt));
+            return View(Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month));
         }
 
         public IActionResult Create()
@@ -40,8 +48,33 @@ namespace Contract_Monthly_Claim_System.Controllers
         public IActionResult Edit(Guid id)
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
-            ViewBag.Lecturers = Lecturers.Values;
+
+            var lecturer = Lecturers[claim.LecturerId];
+            ViewBag.LecturerName = lecturer.FullName;
+            ViewBag.HourlyRate = lecturer.HourlyRate; // Pass rate to the view
+
             return View(claim);
+        }
+
+        // NEW: Action to handle adding a single item to the claim
+        [HttpPost]
+        public IActionResult AddItem(Guid claimId, DateTime date, decimal hours, string activityDescription)
+        {
+            if (!Claims.TryGetValue(claimId, out var claim)) return NotFound();
+            if (claim.Status != ClaimStatus.Draft) return Unauthorized(); // Can't add items to a submitted claim
+
+            var lecturer = Lecturers[claim.LecturerId];
+            var newItem = new ClaimItem
+            {
+                ClaimId = claimId,
+                Date = date,
+                Hours = hours,
+                HourlyRate = lecturer.HourlyRate, // Use lecturer's default rate
+                ActivityDescription = activityDescription
+            };
+            claim.Items.Add(newItem);
+
+            return RedirectToAction("Edit", new { id = claimId });
         }
 
         [HttpPost]
@@ -54,47 +87,11 @@ namespace Contract_Monthly_Claim_System.Controllers
         }
 
         [HttpPost]
-        public IActionResult ClockIn(Guid id, DateTime start, DateTime end)
-        {
-            if (!Claims.TryGetValue(id, out var claim)) return NotFound();
-            var lecturer = Lecturers[claim.LecturerId];
-            var item = new ClaimItem
-            {
-                ClaimId = claim.ClaimId,
-                Date = start.Date,
-                Hours = (decimal)(end - start).TotalHours,
-                HourlyRate = lecturer.HourlyRate,
-                ActivityDescription = "Clocked session"
-            };
-            claim.Items.Add(item);
-            return Json(new { success = true, hours = item.Hours, amount = item.Amount });
-        }
-
-        [HttpPost]
         public async Task<IActionResult> Upload(Guid id, IFormFile file)
         {
-            if (!Claims.TryGetValue(id, out var claim)) return NotFound();
-            if (file != null && file.Length > 0)
-            {
-                var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                Directory.CreateDirectory(uploads);
-                var filename = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-                var filepath = Path.Combine(uploads, filename);
-                using (var fs = System.IO.File.Create(filepath))
-                {
-                    await file.CopyToAsync(fs);
-                }
-                claim.Documents.Add(new SupportingDocument
-                {
-                    ClaimId = id,
-                    FileName = file.FileName,
-                    FileUrl = $"/uploads/{filename}",
-                    ContentType = file.ContentType,
-                    FileSize = file.Length
-                });
-            }
+            // This functionality is preserved for a later step
             return RedirectToAction("Edit", new { id });
         }
     }
-
 }
+
