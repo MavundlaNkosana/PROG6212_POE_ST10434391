@@ -1,71 +1,29 @@
-html {
-    position: relative;
-    min-height: 100%;
+/* ... existing styles ... */
+
+/* File Upload Section Styling */
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
-body {
-    margin-bottom: 60px;
-    background-color: #f8f9fa;
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
-.footer {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    white-space: nowrap;
-    line-height: 60px;
+.list-group-item a {
+    color: #0056b3;
+    text-decoration: none;
 }
 
-.card {
-    border: 1px solid #dee2e6;
-    border-radius: .35rem;
-}
-
-.card-header {
-    font-weight: 500;
-}
-
-.badge {
-    padding: .5em .8em;
-    font-size: 90%;
-}
-
-.badge-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-success.btn-lg {
-    padding: 12px 20px;
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-/* Coordinator Dashboard and Details Styles */
-.table-hover tbody tr:hover {
-    background-color: #f1f1f1;
-}
-
-.font-weight-bold {
-    font-weight: 700 !important;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.text-center {
-    text-align: center;
-}
-
-#decision-section .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    padding: 10px;
-}
-
-    #decision-section .btn i {
-        margin-right: 8px;
+    .list-group-item a:hover {
+        text-decoration: underline;
     }
+
+.list-group-item .badge {
+    font-size: 0.8em;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}

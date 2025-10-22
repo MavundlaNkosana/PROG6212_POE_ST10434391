@@ -14,8 +14,10 @@ namespace Contract_Monthly_Claim_System.Models
         public ClaimStatus Status { get; set; } = ClaimStatus.Draft;
         public List<ClaimItem> Items { get; set; } = new List<ClaimItem>();
         public List<SupportingDocument> Documents { get; set; } = new List<SupportingDocument>();
+        public List<Approval> Approvals { get; set; } = new List<Approval>(); // To track approval history
         public string Notes { get; set; }
 
+        // Calculated properties remain the same
         public decimal TotalHours => Items.Sum(i => i.Hours);
         public decimal TotalAmount => Items.Sum(i => i.Amount);
     }

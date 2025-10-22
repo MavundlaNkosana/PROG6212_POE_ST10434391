@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System;
+using System.Collections.Generic;
 
 namespace Contract_Monthly_Claim_System.Controllers
 {
@@ -15,7 +16,7 @@ namespace Contract_Monthly_Claim_System.Controllers
         public static ConcurrentDictionary<Guid, Claim> Claims = new();
         public static ConcurrentDictionary<Guid, Lecturer> Lecturers = new();
 
-        // Seed a lecturer and a draft claim for demonstration
+        // Seeding remains the same...
         static ClaimsController()
         {
             var lecturer = new Lecturer { StaffNumber = "L001", FullName = "Dr. Thabo", Email = "thabo@uni.edu", HourlyRate = 500.00m };
@@ -26,10 +27,7 @@ namespace Contract_Monthly_Claim_System.Controllers
             Claims.TryAdd(draftClaim.ClaimId, draftClaim);
         }
 
-        public IActionResult Index()
-        {
-            return View(Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month));
-        }
+        public IActionResult Index() => View(Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month));
 
         public IActionResult Create()
         {
@@ -51,29 +49,30 @@ namespace Contract_Monthly_Claim_System.Controllers
 
             var lecturer = Lecturers[claim.LecturerId];
             ViewBag.LecturerName = lecturer.FullName;
-            ViewBag.HourlyRate = lecturer.HourlyRate; // Pass rate to the view
+            ViewBag.HourlyRate = lecturer.HourlyRate;
+
+            // Pass any error/success messages to the view
+            ViewBag.UploadMessage = TempData["UploadMessage"];
+            ViewBag.UploadError = TempData["UploadError"];
 
             return View(claim);
         }
 
-        // NEW: Action to handle adding a single item to the claim
         [HttpPost]
         public IActionResult AddItem(Guid claimId, DateTime date, decimal hours, string activityDescription)
         {
             if (!Claims.TryGetValue(claimId, out var claim)) return NotFound();
-            if (claim.Status != ClaimStatus.Draft) return Unauthorized(); // Can't add items to a submitted claim
+            if (claim.Status != ClaimStatus.Draft) return Unauthorized();
 
             var lecturer = Lecturers[claim.LecturerId];
-            var newItem = new ClaimItem
+            claim.Items.Add(new ClaimItem
             {
                 ClaimId = claimId,
                 Date = date,
                 Hours = hours,
-                HourlyRate = lecturer.HourlyRate, // Use lecturer's default rate
+                HourlyRate = lecturer.HourlyRate,
                 ActivityDescription = activityDescription
-            };
-            claim.Items.Add(newItem);
-
+            });
             return RedirectToAction("Edit", new { id = claimId });
         }
 
@@ -86,10 +85,63 @@ namespace Contract_Monthly_Claim_System.Controllers
             return RedirectToAction("Index");
         }
 
+        // UPDATED: Secure Upload Action
         [HttpPost]
         public async Task<IActionResult> Upload(Guid id, IFormFile file)
         {
-            // This functionality is preserved for a later step
+            if (!Claims.TryGetValue(id, out var claim)) return NotFound();
+            if (claim.Status != ClaimStatus.Draft)
+            {
+                TempData["UploadError"] = "Cannot upload documents to a claim that has already been submitted.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            // 1. File validation
+            if (file == null || file.Length == 0)
+            {
+                TempData["UploadError"] = "Please select a file to upload.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            // 2. File size limit (e.g., 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                TempData["UploadError"] = "File size cannot exceed 5MB.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            // 3. File type validation
+            var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                TempData["UploadError"] = "Invalid file type. Only PDF, DOCX, and XLSX files are allowed.";
+                return RedirectToAction("Edit", new { id });
+            }
+
+            // 4. Secure storage
+            var uploadsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploadsFolderPath); // Ensure the directory exists
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+            var filePath = Path.Combine(uploadsFolderPath, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // 5. Link to claim
+            claim.Documents.Add(new SupportingDocument
+            {
+                ClaimId = id,
+                FileName = file.FileName,
+                FileUrl = $"/uploads/{uniqueFileName}",
+                ContentType = file.ContentType,
+                FileSize = file.Length
+            });
+
+            TempData["UploadMessage"] = $"File '{file.FileName}' uploaded successfully.";
             return RedirectToAction("Edit", new { id });
         }
     }
