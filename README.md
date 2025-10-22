@@ -1,4 +1,5 @@
 Contract Monthly Claim System (ST10434391)
+Github link: https://github.com/MavundlaNkosana/PROG6212_POE_ST10434391
 
 This application is designed to manage monthly claims for contract lecturers. It provides a simple, end-to-end workflow for lecturers to submit claims, upload supporting documents, and for coordinators or managers to review, approve, or reject these claims.
 
