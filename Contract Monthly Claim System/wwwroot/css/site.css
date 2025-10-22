@@ -1,29 +1,46 @@
 /* ... existing styles ... */
 
-/* File Upload Section Styling */
-.input-group .form-control {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+/* Claim Status Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 0.5em 0.75em;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
 }
 
-.input-group .btn {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+.badge-secondary { /* Draft */
+    color: #fff;
+    background-color: #6c757d;
 }
 
-.list-group-item a {
-    color: #0056b3;
-    text-decoration: none;
+.badge-primary { /* Submitted */
+    color: #fff;
+    background-color: #007bff;
 }
 
-    .list-group-item a:hover {
-        text-decoration: underline;
-    }
-
-.list-group-item .badge {
-    font-size: 0.8em;
+.badge-info { /* Under Review */
+    color: #fff;
+    background-color: #17a2b8;
 }
 
-.mr-2 {
-    margin-right: 0.5rem;
+.badge-success { /* Approved */
+    color: #fff;
+    background-color: #28a745;
+}
+
+.badge-danger { /* Rejected */
+    color: #fff;
+    background-color: #dc3545;
+}
+
+.badge-light { /* Default */
+    color: #212529;
+    background-color: #f8f9fa;
 }
