@@ -1,0 +1,26 @@
+﻿@model Contract_Monthly_Claim_System.Models.Claim
+
+@{
+    ViewData["Title"] = "Create Claim";
+}
+
+<h2>Create Claim</h2>
+
+<form asp-action="Create" method="post">
+    <div>
+        <label>Lecturer</label>
+        <select asp-for="LecturerId" asp-items="@(new SelectList(ViewBag.Lecturers, "LecturerId", "FullName"))"></select>
+    </div>
+
+    <div>
+        <label>Month</label>
+        <input asp-for="Month" type="number" min="1" max="12" />
+    </div>
+
+    <div>
+        <label>Year</label>
+        <input asp-for="Year" type="number" />
+    </div>
+
+    <button type="submit">Create Claim</button>
+</form>

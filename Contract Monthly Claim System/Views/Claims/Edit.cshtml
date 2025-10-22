@@ -1,0 +1,36 @@
+﻿@model Contract_Monthly_Claim_System.Models.Claim
+
+<h2>Claim for @Model.Month/@Model.Year</h2>
+
+<button id="clockBtn">Clock In / Out</button>
+<div id="lastSession"></div>
+
+<table>
+    <thead>
+        <tr><th>Date</th><th>Hours</th><th>Rate</th><th>Amount</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var it in Model.Items)
+        {
+            <tr><td>@it.Date.ToShortDateString()</td><td>@it.Hours</td><td>@it.HourlyRate</td><td>@it.Amount</td></tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <strong>Total hours:</strong> @Model.TotalHours <br />
+    <strong>Total amount:</strong> @Model.TotalAmount
+</div>
+
+<form asp-action="Upload" asp-controller="Claims" enctype="multipart/form-data" method="post">
+    <input type="hidden" name="id" value="@Model.ClaimId" />
+    <input type="file" name="file" />
+    <button type="submit">Upload supporting doc</button>
+</form>
+
+<form asp-action="Submit" method="post">
+    <input type="hidden" name="id" value="@Model.ClaimId" />
+    <button type="submit">Submit Claim</button>
+</form>
+
+<script src="/js/clock.js"></script>
