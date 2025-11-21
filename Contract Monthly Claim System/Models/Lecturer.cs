@@ -2,7 +2,8 @@
 
 namespace Contract_Monthly_Claim_System.Models
 {
-    public enum ClaimStatus { Draft, Submitted, UnderReview, Approved, Rejected }
+    // Added 'Settled' to track payment status
+    public enum ClaimStatus { Draft, Submitted, UnderReview, Approved, Rejected, Settled }
 
     public class Lecturer
     {

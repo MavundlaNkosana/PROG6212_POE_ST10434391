@@ -11,24 +11,22 @@ namespace Contract_Monthly_Claim_System.Controllers
 {
     public class ClaimsController : Controller
     {
-        // We make these public static so they act as a shared "database" for the app
+        // In-memory database
         public static ConcurrentDictionary<Guid, Claim> Claims = new();
         public static ConcurrentDictionary<Guid, Lecturer> Lecturers = new();
 
-        // Constructor to seed data
+        // Seed Data
         static ClaimsController()
         {
-            // 1. Create a demo Lecturer
             var lecturer = new Lecturer
             {
                 StaffNumber = "L001",
                 FullName = "Dr. Thabo",
                 Email = "thabo@uni.edu",
-                HourlyRate = 500.00m
+                HourlyRate = 550.00m // Updated rate for testing
             };
             Lecturers.TryAdd(lecturer.LecturerId, lecturer);
 
-            // 2. Create a demo Claim
             var claim = new Claim
             {
                 LecturerId = lecturer.LecturerId,
@@ -36,26 +34,22 @@ namespace Contract_Monthly_Claim_System.Controllers
                 Year = DateTime.Now.Year,
                 Status = ClaimStatus.Draft
             };
-            // Add an item to the claim
+            // Add initial item
             claim.Items.Add(new ClaimItem
             {
                 Date = DateTime.Now.AddDays(-5),
-                Hours = 5,
-                HourlyRate = 500,
+                Hours = 2,
+                HourlyRate = 550.00m,
                 ActivityDescription = "Lecture Delivery"
             });
 
             Claims.TryAdd(claim.ClaimId, claim);
         }
 
-        // GET: Claims
-        // This is the action causing your 404. It MUST be public.
+        // GET: Claims/Index
         public IActionResult Index()
         {
-            // We pass the Lecturers dictionary so the View can look up names
             ViewBag.Lecturers = Lecturers;
-
-            // Return the list of claims, sorted by date
             var claimsList = Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month);
             return View(claimsList);
         }
@@ -81,16 +75,16 @@ namespace Contract_Monthly_Claim_System.Controllers
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
 
-            // Pass lecturer details for the header
             if (Lecturers.TryGetValue(claim.LecturerId, out var lecturer))
             {
                 ViewBag.LecturerName = lecturer.FullName;
+                // CRITICAL: Passing the rate to the view for the JavaScript calculator
                 ViewBag.HourlyRate = lecturer.HourlyRate;
             }
             else
             {
                 ViewBag.LecturerName = "Unknown";
-                ViewBag.HourlyRate = 0;
+                ViewBag.HourlyRate = 0m;
             }
 
             return View(claim);
@@ -102,10 +96,16 @@ namespace Contract_Monthly_Claim_System.Controllers
         {
             if (!Claims.TryGetValue(claimId, out var claim)) return NotFound();
 
-            // Prevent editing if not in Draft
             if (claim.Status != ClaimStatus.Draft) return Unauthorized();
 
-            // Find lecturer to get the rate
+            // Server-Side Validation (Mirroring Client-Side)
+            if (hours <= 0 || hours > 24)
+            {
+                TempData["ErrorMessage"] = "Invalid hours entered. Hours must be between 0.1 and 24.";
+                return RedirectToAction("Edit", new { id = claimId });
+            }
+
+            // Get Rate from Server (Security: Don't trust client-side rate)
             var rate = 0m;
             if (Lecturers.TryGetValue(claim.LecturerId, out var lecturer))
             {
@@ -121,6 +121,7 @@ namespace Contract_Monthly_Claim_System.Controllers
                 ActivityDescription = activityDescription
             });
 
+            TempData["SuccessMessage"] = "Work item added successfully.";
             return RedirectToAction("Edit", new { id = claimId });
         }
 
@@ -129,6 +130,13 @@ namespace Contract_Monthly_Claim_System.Controllers
         public IActionResult Submit(Guid id)
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
+
+            // Business Rule Validation
+            if (!claim.Items.Any())
+            {
+                TempData["ErrorMessage"] = "You cannot submit an empty claim. Please add work items.";
+                return RedirectToAction("Edit", new { id = id });
+            }
 
             claim.Status = ClaimStatus.Submitted;
             claim.SubmittedAt = DateTime.UtcNow;
@@ -142,14 +150,13 @@ namespace Contract_Monthly_Claim_System.Controllers
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
 
-            // Validation checks
             if (file == null || file.Length == 0)
             {
                 TempData["ErrorMessage"] = "Please select a file.";
                 return RedirectToAction("Edit", new { id });
             }
 
-            if (file.Length > 5 * 1024 * 1024) // 5MB
+            if (file.Length > 5 * 1024 * 1024)
             {
                 TempData["ErrorMessage"] = "File is too large (Max 5MB).";
                 return RedirectToAction("Edit", new { id });
@@ -162,7 +169,6 @@ namespace Contract_Monthly_Claim_System.Controllers
                 return RedirectToAction("Edit", new { id });
             }
 
-            // Save file
             var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             Directory.CreateDirectory(uploads);
 
