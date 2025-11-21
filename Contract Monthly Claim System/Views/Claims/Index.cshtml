@@ -1,8 +1,12 @@
 ﻿@using Contract_Monthly_Claim_System.Helpers
+@using System.Collections.Concurrent
+@using Contract_Monthly_Claim_System.Models
 @model IEnumerable<Contract_Monthly_Claim_System.Models.Claim>
 
 @{
     ViewData["Title"] = "My Claims";
+    // Safely cast the Viewbag data
+    var lecturers = ViewBag.Lecturers as ConcurrentDictionary<Guid, Lecturer>;
 }
 
 <div class="container mt-4">
@@ -17,6 +21,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th>Claim Period</th>
+                        <th>Lecturer</th>
                         <th>Submitted On</th>
                         <th class="text-right">Total Amount</th>
                         <th class="text-center">Status</th>
@@ -24,22 +29,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var claim in Model)
+                    @if (Model.Any())
+                    {
+                        @foreach (var claim in Model)
+                        {
+                            <tr>
+                                <td>@claim.Month/@claim.Year</td>
+                                <td>
+                                    @if (lecturers != null && lecturers.TryGetValue(claim.LecturerId, out var l))
+                                    {
+                                        @l.FullName
+                                    }
+                                    else
+                                    {
+                                        <span>Unknown</span>
+                                    }
+                                </td>
+                                <td>@(claim.SubmittedAt.HasValue? claim.SubmittedAt.Value.ToShortDateString() : "-")</td>
+                                <td class="text-right font-weight-bold">@claim.TotalAmount.ToString("C")</td>
+                                <td class="text-center">
+                                    <span class="badge @ClaimStatusHelper.GetStatusBadgeClass(claim.Status)">
+                                        @claim.Status
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="Edit" asp-route-id="@claim.ClaimId" class="btn btn-sm btn-outline-primary">
+                                        View / Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td>@claim.Month/@claim.Year</td>
-                            <td>@(claim.SubmittedAt.HasValue? claim.SubmittedAt.Value.ToString("yyyy-MM-dd") : "Not submitted")</td>
-                            <td class="text-right font-weight-bold">@claim.TotalAmount.ToString("C")</td>
-                            <td class="text-center">
-                                <span class="badge @ClaimStatusHelper.GetStatusBadgeClass(claim.Status)">
-                                    @claim.Status.ToString()
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <a asp-action="Edit" asp-route-id="@claim.ClaimId" class="btn btn-sm btn-outline-primary">
-                                    @(claim.Status == ClaimStatus.Draft ? "Edit & Submit" : "View Details")
-                                </a>
-                            </td>
+                            <td colspan="6" class="text-center">No claims found. Click "Create New Claim" to start.</td>
                         </tr>
                     }
                 </tbody>
@@ -47,4 +71,3 @@
         </div>
     </div>
 </div>
-

@@ -1,78 +1,25 @@
 ﻿@model Contract_Monthly_Claim_System.Models.Claim
 @using Contract_Monthly_Claim_System.Helpers
-
 @{
     ViewData["Title"] = "Manage Claim";
     var isDraft = Model.Status == ClaimStatus.Draft;
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="mb-0">Claim for @Model.Month/@Model.Year</h2>
-            <p class="text-muted">Status: <span class="badge @ClaimStatusHelper.GetStatusBadgeClass(Model.Status)">@Model.Status</span></p>
-        </div>
-        <a asp-action="Index" class="btn btn-secondary">Back to My Claims</a>
-    </div>
 
-    <!-- Add a message for non-draft claims -->
-    @if (!isDraft)
+    <!-- ... existing view code ... -->
+    <!-- Add these lines to display feedback messages -->
+    @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-info">
-            This claim has been submitted and can no longer be edited.
-        </div>
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
     }
 
     <div class="row">
-        <!-- Left Column: Add New Item Form -->
-        <div class="col-md-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Add a Work Item</h5>
-                </div>
-                <div class="card-body">
-                    <fieldset disabled="@(!isDraft)">
-                        <form asp-action="AddItem" method="post">
-                            <!-- ... form fields ... -->
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary" @(!isDraft ? "disabled" : "")>Add Item to Claim</button>
-                            </div>
-                        </form>
-                    </fieldset>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Summary, Uploads, and Submission -->
-        <div class="col-md-7">
-            <!-- ... summary table ... -->
-
-            <div class="card mt-4">
-                <div class="card-header"><h5 class="mb-0">Supporting Documents</h5></div>
-                <div class="card-body">
-                    <fieldset disabled="@(!isDraft)">
-                        <form asp-action="Upload" method="post" enctype="multipart/form-data" class="mb-3">
-                            <!-- ... upload form ... -->
-                        </form>
-                    </fieldset>
-                    <!-- ... list of uploaded files ... -->
-                </div>
-            </div>
-
-            @if (isDraft)
-            {
-                <div class="card mt-4">
-                    <div class="card-footer text-center">
-                        <form asp-action="Submit" method="post" onsubmit="return confirm('Are you sure you want to submit this claim?');">
-                            <input type="hidden" name="id" value="@Model.ClaimId" />
-                            <button type="submit" class="btn btn-success btn-lg btn-block">
-                                Click Here to Submit Final Claim
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            }
-        </div>
+        <!-- ... rest of the view ... -->
     </div>
 </div>
 

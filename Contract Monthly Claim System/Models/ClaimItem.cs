@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Contract_Monthly_Claim_System.Models
 {
@@ -11,7 +9,7 @@ namespace Contract_Monthly_Claim_System.Models
         public DateTime Date { get; set; }
         public decimal Hours { get; set; }
         public decimal HourlyRate { get; set; }
-        public string ActivityDescription { get; set; }
+        public string ActivityDescription { get; set; } = string.Empty;
         public decimal Amount => Math.Round(Hours * HourlyRate, 2);
     }
 }

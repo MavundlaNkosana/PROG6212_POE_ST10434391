@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Globalization; // Required for CultureInfo
-using Microsoft.AspNetCore.Localization; // Required for RequestLocalizationOptions
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 namespace Contract_Monthly_Claim_System
 {
@@ -16,42 +16,36 @@ namespace Contract_Monthly_Claim_System
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            // --- START: Culture Configuration for South African Rand (R) ---
+            // Add Session support for TempData (error messages)
+            builder.Services.AddSession();
+            builder.Services.AddMvc().AddSessionStateTempDataProvider();
+
+            // Configure Currency (Rands)
             builder.Services.Configure<RequestLocalizationOptions>(options =>
             {
-                var supportedCultures = new[]
-                {
-                    // Set the culture to English (South Africa)
-                    new CultureInfo("en-ZA")
-                };
-
-                // Set the default culture for the application
+                var supportedCultures = new[] { new CultureInfo("en-ZA") };
                 options.DefaultRequestCulture = new RequestCulture("en-ZA");
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-            // --- END: Culture Configuration ---
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
             }
 
             app.UseStaticFiles();
-
-            // --- ADD THIS LINE: Apply the culture settings to every request ---
             app.UseRequestLocalization();
-
             app.UseRouting();
-
             app.UseAuthorization();
+            app.UseSession();
 
+            // CRITICAL: This tells the app to start at the 'Home' controller
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Claims}/{action=Index}/{id?}");
+                pattern: "{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }

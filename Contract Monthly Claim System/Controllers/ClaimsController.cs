@@ -1,40 +1,73 @@
-﻿using Contract_Monthly_Claim_System.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using Contract_Monthly_Claim_System.Models;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using System.IO;
-using System;
-using System.Collections.Generic;
 
 namespace Contract_Monthly_Claim_System.Controllers
 {
     public class ClaimsController : Controller
     {
-        // In-memory stores for prototype
+        // We make these public static so they act as a shared "database" for the app
         public static ConcurrentDictionary<Guid, Claim> Claims = new();
         public static ConcurrentDictionary<Guid, Lecturer> Lecturers = new();
 
-        // Seeding remains the same...
+        // Constructor to seed data
         static ClaimsController()
         {
-            var lecturer = new Lecturer { StaffNumber = "L001", FullName = "Dr. Thabo", Email = "thabo@uni.edu", HourlyRate = 500.00m };
+            // 1. Create a demo Lecturer
+            var lecturer = new Lecturer
+            {
+                StaffNumber = "L001",
+                FullName = "Dr. Thabo",
+                Email = "thabo@uni.edu",
+                HourlyRate = 500.00m
+            };
             Lecturers.TryAdd(lecturer.LecturerId, lecturer);
 
-            var draftClaim = new Claim { LecturerId = lecturer.LecturerId, Month = 10, Year = 2025, Status = ClaimStatus.Draft };
-            draftClaim.Items.Add(new ClaimItem { Date = new DateTime(2025, 10, 5), Hours = 3, HourlyRate = 500, ActivityDescription = "Grading assignments" });
-            Claims.TryAdd(draftClaim.ClaimId, draftClaim);
+            // 2. Create a demo Claim
+            var claim = new Claim
+            {
+                LecturerId = lecturer.LecturerId,
+                Month = DateTime.Now.Month,
+                Year = DateTime.Now.Year,
+                Status = ClaimStatus.Draft
+            };
+            // Add an item to the claim
+            claim.Items.Add(new ClaimItem
+            {
+                Date = DateTime.Now.AddDays(-5),
+                Hours = 5,
+                HourlyRate = 500,
+                ActivityDescription = "Lecture Delivery"
+            });
+
+            Claims.TryAdd(claim.ClaimId, claim);
         }
 
-        public IActionResult Index() => View(Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month));
+        // GET: Claims
+        // This is the action causing your 404. It MUST be public.
+        public IActionResult Index()
+        {
+            // We pass the Lecturers dictionary so the View can look up names
+            ViewBag.Lecturers = Lecturers;
 
+            // Return the list of claims, sorted by date
+            var claimsList = Claims.Values.OrderByDescending(c => c.Year).ThenByDescending(c => c.Month);
+            return View(claimsList);
+        }
+
+        // GET: Claims/Create
         public IActionResult Create()
         {
             ViewBag.Lecturers = Lecturers.Values;
             return View();
         }
 
+        // POST: Claims/Create
         [HttpPost]
         public IActionResult Create(Claim model)
         {
@@ -43,107 +76,115 @@ namespace Contract_Monthly_Claim_System.Controllers
             return RedirectToAction("Edit", new { id = model.ClaimId });
         }
 
+        // GET: Claims/Edit/5
         public IActionResult Edit(Guid id)
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
 
-            var lecturer = Lecturers[claim.LecturerId];
-            ViewBag.LecturerName = lecturer.FullName;
-            ViewBag.HourlyRate = lecturer.HourlyRate;
-
-            // Pass any error/success messages to the view
-            ViewBag.UploadMessage = TempData["UploadMessage"];
-            ViewBag.UploadError = TempData["UploadError"];
+            // Pass lecturer details for the header
+            if (Lecturers.TryGetValue(claim.LecturerId, out var lecturer))
+            {
+                ViewBag.LecturerName = lecturer.FullName;
+                ViewBag.HourlyRate = lecturer.HourlyRate;
+            }
+            else
+            {
+                ViewBag.LecturerName = "Unknown";
+                ViewBag.HourlyRate = 0;
+            }
 
             return View(claim);
         }
 
+        // POST: Claims/AddItem
         [HttpPost]
         public IActionResult AddItem(Guid claimId, DateTime date, decimal hours, string activityDescription)
         {
             if (!Claims.TryGetValue(claimId, out var claim)) return NotFound();
+
+            // Prevent editing if not in Draft
             if (claim.Status != ClaimStatus.Draft) return Unauthorized();
 
-            var lecturer = Lecturers[claim.LecturerId];
+            // Find lecturer to get the rate
+            var rate = 0m;
+            if (Lecturers.TryGetValue(claim.LecturerId, out var lecturer))
+            {
+                rate = lecturer.HourlyRate;
+            }
+
             claim.Items.Add(new ClaimItem
             {
                 ClaimId = claimId,
                 Date = date,
                 Hours = hours,
-                HourlyRate = lecturer.HourlyRate,
+                HourlyRate = rate,
                 ActivityDescription = activityDescription
             });
+
             return RedirectToAction("Edit", new { id = claimId });
         }
 
+        // POST: Claims/Submit
         [HttpPost]
         public IActionResult Submit(Guid id)
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
+
             claim.Status = ClaimStatus.Submitted;
             claim.SubmittedAt = DateTime.UtcNow;
+
             return RedirectToAction("Index");
         }
 
-        // UPDATED: Secure Upload Action
+        // POST: Claims/Upload
         [HttpPost]
         public async Task<IActionResult> Upload(Guid id, IFormFile file)
         {
             if (!Claims.TryGetValue(id, out var claim)) return NotFound();
-            if (claim.Status != ClaimStatus.Draft)
-            {
-                TempData["UploadError"] = "Cannot upload documents to a claim that has already been submitted.";
-                return RedirectToAction("Edit", new { id });
-            }
 
-            // 1. File validation
+            // Validation checks
             if (file == null || file.Length == 0)
             {
-                TempData["UploadError"] = "Please select a file to upload.";
+                TempData["ErrorMessage"] = "Please select a file.";
                 return RedirectToAction("Edit", new { id });
             }
 
-            // 2. File size limit (e.g., 5MB)
-            if (file.Length > 5 * 1024 * 1024)
+            if (file.Length > 5 * 1024 * 1024) // 5MB
             {
-                TempData["UploadError"] = "File size cannot exceed 5MB.";
+                TempData["ErrorMessage"] = "File is too large (Max 5MB).";
                 return RedirectToAction("Edit", new { id });
             }
 
-            // 3. File type validation
-            var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext != ".pdf" && ext != ".docx" && ext != ".xlsx")
             {
-                TempData["UploadError"] = "Invalid file type. Only PDF, DOCX, and XLSX files are allowed.";
+                TempData["ErrorMessage"] = "Only .pdf, .docx, and .xlsx allowed.";
                 return RedirectToAction("Edit", new { id });
             }
 
-            // 4. Secure storage
-            var uploadsFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            Directory.CreateDirectory(uploadsFolderPath); // Ensure the directory exists
+            // Save file
+            var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            Directory.CreateDirectory(uploads);
 
-            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(uploadsFolderPath, uniqueFileName);
+            var filename = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+            var filepath = Path.Combine(uploads, filename);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (var fs = new FileStream(filepath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(fs);
             }
 
-            // 5. Link to claim
             claim.Documents.Add(new SupportingDocument
             {
                 ClaimId = id,
                 FileName = file.FileName,
-                FileUrl = $"/uploads/{uniqueFileName}",
+                FileUrl = $"/uploads/{filename}",
                 ContentType = file.ContentType,
                 FileSize = file.Length
             });
 
-            TempData["UploadMessage"] = $"File '{file.FileName}' uploaded successfully.";
+            TempData["SuccessMessage"] = "Document uploaded!";
             return RedirectToAction("Edit", new { id });
         }
     }
 }
-

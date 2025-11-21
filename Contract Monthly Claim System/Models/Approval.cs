@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Contract_Monthly_Claim_System.Models
 {
@@ -9,9 +7,9 @@ namespace Contract_Monthly_Claim_System.Models
         public Guid ApprovalId { get; set; } = Guid.NewGuid();
         public Guid ClaimId { get; set; }
         public Guid ApproverId { get; set; }
-        public string ApproverRole { get; set; } // Coordinator/Manager
+        public string ApproverRole { get; set; } = string.Empty;
         public DateTime DecisionDate { get; set; }
         public bool IsApproved { get; set; }
-        public string Comments { get; set; }
+        public string? Comments { get; set; }
     }
 }

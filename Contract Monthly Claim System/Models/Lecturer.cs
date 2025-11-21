@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Contract_Monthly_Claim_System.Models
 {
@@ -9,9 +7,9 @@ namespace Contract_Monthly_Claim_System.Models
     public class Lecturer
     {
         public Guid LecturerId { get; set; } = Guid.NewGuid();
-        public string StaffNumber { get; set; }
-        public string FullName { get; set; }
-        public string Email { get; set; }
+        public string StaffNumber { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public decimal HourlyRate { get; set; }
     }
 }

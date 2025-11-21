@@ -1,39 +1,84 @@
 ﻿@model Contract_Monthly_Claim_System.Models.Claim
-
 @{
-    ViewData["Title"] = "Review Claim Details";
+    ViewData["Title"] = "Claim Details";
 }
 
 <div class="container mt-4">
-    <!-- ... Header and Claim Items Table ... -->
-    <div class="card">
-        <div class="card-header">
-            <h5>Claim Details</h5>
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h3>Claim Details for @Model.Month/@Model.Year</h3>
+            <p class="text-muted">Submitted by: Dr. Thabo</p>
         </div>
         <div class="card-body">
-            <!-- ... Claim Items Table ... -->
-            <!-- NEW: Display Uploaded Documents -->
-            <h5 class="mt-4">Supporting Documents</h5>
+            <!-- Items Table -->
+            <h5 class="card-title">Claim Items</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity Description</th>
+                        <th>Hours</th>
+                        <th>Hourly Rate</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Date.ToShortDateString()</td>
+                            <td>@item.ActivityDescription</td>
+                            <td>@item.Hours.ToString("N2")</td>
+                            <td>@item.HourlyRate.ToString("C")</td>
+                            <td>@item.Amount.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="font-weight-bold">
+                        <td colspan="2"></td>
+                        <td><strong>Total Hours: @Model.TotalHours.ToString("N2")</strong></td>
+                        <td colspan="2"><strong>Total Amount: @Model.TotalAmount.ToString("C")</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Supporting Documents -->
             @if (Model.Documents.Any())
             {
+                <hr />
+                <h5 class="card-title mt-4">Supporting Documents</h5>
                 <ul class="list-group">
                     @foreach (var doc in Model.Documents)
                     {
                         <li class="list-group-item">
-                            <a href="@doc.FileUrl" target="_blank">
-                                <i class="fas fa-download mr-2"></i>@doc.FileName
-                            </a>
+                            <i class="fas fa-file-alt mr-2"></i>
+                            <a href="@doc.FileUrl" target="_blank">@doc.FileName</a>
+                            <span class="text-muted float-right">(@((doc.FileSize / 1024.0).ToString("N2")) KB)</span>
                         </li>
                     }
                 </ul>
             }
-            else
-            {
-                <p class="text-muted">No supporting documents were submitted with this claim.</p>
-            }
-        </div>
-        <div class="card-footer" id="decision-section">
-            <!-- ... Approval/Rejection Forms ... -->
+
+            <!-- Approval Actions -->
+            <hr />
+            <div class="mt-4 text-center">
+                <h5 class="mb-3">Take Action</h5>
+                <div class="btn-group shadow-sm">
+                    <form asp-action="Approve" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.ClaimId" />
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-check-circle mr-2"></i>Approve
+                        </button>
+                    </form>
+                    <form asp-action="Reject" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.ClaimId" />
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-times-circle mr-2"></i>Reject
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
