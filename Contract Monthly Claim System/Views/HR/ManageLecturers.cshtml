@@ -1,0 +1,48 @@
+﻿@model IEnumerable<Contract_Monthly_Claim_System.Models.Lecturer>
+@{
+    ViewData["Title"] = "Lecturer Directory";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Lecturer Directory</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Staff #</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Hourly Rate</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lecturer in Model)
+                    {
+                        <tr>
+                            <td>@lecturer.StaffNumber</td>
+                            <td>@lecturer.FullName</td>
+                            <td>@lecturer.Email</td>
+                            <td>@lecturer.HourlyRate.ToString("C")</td>
+                            <td>
+                                <a asp-action="EditLecturer" asp-route-id="@lecturer.LecturerId" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

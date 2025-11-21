@@ -1,0 +1,58 @@
+﻿@using Contract_Monthly_Claim_System.Controllers
+@model IEnumerable<Contract_Monthly_Claim_System.Models.Claim>
+@{
+    ViewData["Title"] = "Approved Claims Report";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Payment Report (Approved Claims)</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Lecturer</th>
+                        <th>Period</th>
+                        <th>Approved Date</th>
+                        <th>Total Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var claim in Model)
+                        {
+                            var lecturerName = "Unknown";
+                            if (ClaimsController.Lecturers.TryGetValue(claim.LecturerId, out var l))
+                            {
+                                lecturerName = l.FullName;
+                            }
+
+                            <tr>
+                                <td>@lecturerName</td>
+                                <td>@claim.Month/@claim.Year</td>
+                                <!-- Use the date of the last approval -->
+                                <td>@claim.Approvals.LastOrDefault()?.DecisionDate.ToString("yyyy-MM-dd")</td>
+                                <td class="fw-bold text-success">@claim.TotalAmount.ToString("C")</td>
+                                <td>
+                                    <a asp-action="GenerateInvoice" asp-route-id="@claim.ClaimId" target="_blank" class="btn btn-sm btn-dark">
+                                        <i class="fas fa-file-invoice"></i> Generate Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" class="text-center text-muted">No approved claims pending payment.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

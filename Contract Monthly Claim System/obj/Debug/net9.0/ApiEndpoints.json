@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "ContainingType": "Contract_Monthly_Claim_System.Controllers.ClaimsApiController",
+    "Method": "GetClaimStatus",
+    "RelativePath": "api/ClaimsApi/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

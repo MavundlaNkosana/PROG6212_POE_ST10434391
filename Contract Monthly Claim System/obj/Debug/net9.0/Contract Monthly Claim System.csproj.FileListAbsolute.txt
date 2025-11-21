@@ -120,7 +120,6 @@ C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Cl
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\scopedcss\bundle\Contract Monthly Claim System.styles.css
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\scopedcss\projectbundle\Contract Monthly Claim System.bundle.scp.css
-C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\compressed\tklhu84eob-r92knu30ky.gz
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\compressed\eo86o0jfdd-61n19gt1b8.gz
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\compressed\92g601dg5b-d0sofc9gwi.gz
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\compressed\2vlewkmvy3-xtxxf3hu2r.gz
@@ -195,3 +194,4 @@ C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Cl
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\Contract Monthly Claim System.pdb
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\Contract Monthly Claim System.genruntimeconfig.cache
 C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\ref\Contract Monthly Claim System.dll
+C:\Users\lab_services_student\Desktop\PROG6212POE_ST10434391\Contract Monthly Claim System\obj\Debug\net9.0\compressed\tklhu84eob-36dw5jgs6a.gz

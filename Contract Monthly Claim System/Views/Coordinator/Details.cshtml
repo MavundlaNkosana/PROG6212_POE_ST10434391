@@ -1,80 +1,195 @@
 ﻿@model Contract_Monthly_Claim_System.Models.Claim
+@using Contract_Monthly_Claim_System.Models
 @{
     ViewData["Title"] = "Claim Details";
+    var verification = ViewBag.VerificationResult as VerificationResult;
 }
 
 <div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h3>Claim Details for @Model.Month/@Model.Year</h3>
-            <p class="text-muted">Submitted by: Dr. Thabo</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Review Claim</h2>
+            <p class="text-muted">For: @ViewBag.LecturerName (@Model.Month/@Model.Year)</p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <!-- AUTOMATION SECTION: System Audit Report -->
+    <div class="card mb-4 shadow-sm border-left-0" style="border-left: 5px solid @(verification.IsPerfect ? "#28a745" : (verification.IsValid ? "#ffc107" : "#dc3545"))">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fas fa-robot mr-2"></i>Automated System Audit
+                @if (verification.IsPerfect)
+                {
+                    <span class="badge bg-success float-end">Passed All Checks</span>
+                }
+                else if (verification.IsValid)
+                {
+                    <span class="badge bg-warning text-dark float-end">Warnings Detected</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger float-end">Critical Errors</span>
+                }
+            </h5>
         </div>
         <div class="card-body">
-            <!-- Items Table -->
-            <h5 class="card-title">Claim Items</h5>
-            <table class="table table-bordered table-striped">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Date</th>
-                        <th>Activity Description</th>
-                        <th>Hours</th>
-                        <th>Hourly Rate</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Items)
-                    {
-                        <tr>
-                            <td>@item.Date.ToShortDateString()</td>
-                            <td>@item.ActivityDescription</td>
-                            <td>@item.Hours.ToString("N2")</td>
-                            <td>@item.HourlyRate.ToString("C")</td>
-                            <td>@item.Amount.ToString("C")</td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
-                    <tr class="font-weight-bold">
-                        <td colspan="2"></td>
-                        <td><strong>Total Hours: @Model.TotalHours.ToString("N2")</strong></td>
-                        <td colspan="2"><strong>Total Amount: @Model.TotalAmount.ToString("C")</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <!-- Supporting Documents -->
-            @if (Model.Documents.Any())
+            @if (verification.IsPerfect)
             {
-                <hr />
-                <h5 class="card-title mt-4">Supporting Documents</h5>
-                <ul class="list-group">
-                    @foreach (var doc in Model.Documents)
-                    {
-                        <li class="list-group-item">
-                            <i class="fas fa-file-alt mr-2"></i>
-                            <a href="@doc.FileUrl" target="_blank">@doc.FileName</a>
-                            <span class="text-muted float-right">(@((doc.FileSize / 1024.0).ToString("N2")) KB)</span>
-                        </li>
-                    }
-                </ul>
+                <p class="text-success mb-0"><i class="fas fa-check-circle mr-2"></i>This claim meets all standard policy criteria (Hours, Rates, and Documentation).</p>
             }
+            else
+            {
+                @if (verification.Errors.Any())
+                {
+                    <div class="alert alert-danger">
+                        <strong><i class="fas fa-exclamation-circle mr-2"></i>Blocking Issues:</strong>
+                        <ul class="mb-0">
+                            @foreach (var err in verification.Errors)
+                            {
+                                <li>@err</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (verification.Warnings.Any())
+                {
+                    <div class="alert alert-warning">
+                        <strong><i class="fas fa-exclamation-triangle mr-2"></i>Policy Warnings:</strong>
+                        <ul class="mb-0">
+                            @foreach (var warn in verification.Warnings)
+                            {
+                                <li>@warn</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+        </div>
+    </div>
 
-            <!-- Approval Actions -->
-            <hr />
-            <div class="mt-4 text-center">
-                <h5 class="mb-3">Take Action</h5>
-                <div class="btn-group shadow-sm">
-                    <form asp-action="Approve" method="post" class="d-inline">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Claim Items Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Claim Items</h5>
+                </div>
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Hours</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            // Highlight row if rate is suspicious
+                            var rateMismatch = item.HourlyRate != (decimal)ViewBag.ContractRate;
+                            <tr class="@(rateMismatch ? "table-danger" : "")">
+                                <td>@item.Date.ToShortDateString()</td>
+                                <td>@item.ActivityDescription</td>
+                                <td>@item.Hours.ToString("N2")</td>
+                                <td>
+                                    @item.HourlyRate.ToString("C")
+                                    @if (rateMismatch)
+                                    {
+                                        <span class="badge bg-danger ml-2">Mismatch</span>
+                                    }
+                                </td>
+                                <td>@item.Amount.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-weight-bold">
+                            <td colspan="4" class="text-end">Total:</td>
+                            <td>@Model.TotalAmount.ToString("C")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Approval History -->
+            @if (Model.Approvals.Any())
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Approval History</h5>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var approval in Model.Approvals)
+                        {
+                            <li class="list-group-item">
+                                <strong>@approval.ApproverRole</strong>
+                                <span class="badge @(approval.IsApproved ? "bg-success" : "bg-danger")">@(approval.IsApproved ? "Approved" : "Rejected")</span>
+                                <span class="text-muted small ml-2">on @approval.DecisionDate.ToString("g")</span>
+                                <p class="mb-0 mt-1 text-muted font-italic">"@approval.Comments"</p>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <!-- Documents -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Supporting Documents</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Documents.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var doc in Model.Documents)
+                            {
+                                <li class="list-group-item px-0">
+                                    <a href="@doc.FileUrl" target="_blank" class="text-decoration-none">
+                                        <i class="fas fa-file-alt mr-2"></i>@doc.FileName
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-danger small"><i class="fas fa-times mr-1"></i> No documents attached</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Final Decision</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Approve" method="post" class="mb-3">
                         <input type="hidden" name="id" value="@Model.ClaimId" />
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-check-circle mr-2"></i>Approve
+                        <div class="mb-2">
+                            <textarea name="comments" class="form-control" placeholder="Approval comments..." rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" @(!verification.IsValid ? "disabled" : "")>
+                            <i class="fas fa-check-circle mr-2"></i>Approve Claim
                         </button>
+                        @if (!verification.IsValid)
+                        {
+                            <small class="text-danger d-block text-center mt-1">Cannot approve: Critical Errors</small>
+                        }
                     </form>
-                    <form asp-action="Reject" method="post" class="d-inline">
+
+                    <form asp-action="Reject" method="post">
                         <input type="hidden" name="id" value="@Model.ClaimId" />
-                        <button type="submit" class="btn btn-danger btn-lg">
-                            <i class="fas fa-times-circle mr-2"></i>Reject
+                        <div class="mb-2">
+                            <textarea name="comments" class="form-control" placeholder="Reason for rejection..." rows="2" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-times-circle mr-2"></i>Reject Claim
                         </button>
                     </form>
                 </div>
@@ -82,4 +197,3 @@
         </div>
     </div>
 </div>
-

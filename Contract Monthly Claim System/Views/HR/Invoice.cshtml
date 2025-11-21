@@ -1,0 +1,101 @@
+﻿@model Contract_Monthly_Claim_System.Models.Claim
+@{
+    Layout = null; // No layout for clean printing
+    var lecturer = ViewBag.Lecturer as Contract_Monthly_Claim_System.Models.Lecturer;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice @ViewBag.InvoiceNumber</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background: #fff;
+            padding: 40px;
+            font-family: sans-serif;
+        }
+
+        .invoice-header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .invoice-footer {
+            border-top: 1px solid #ccc;
+            padding-top: 20px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="invoice-header d-flex justify-content-between align-items-end">
+            <div>
+                <h1 class="display-4">INVOICE</h1>
+                <p class="text-muted mb-0">Contract Claim System Inc.</p>
+            </div>
+            <div class="text-end">
+                <h4>@ViewBag.InvoiceNumber</h4>
+                <p>Date: @DateTime.Now.ToString("dd MMM yyyy")</p>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-6">
+                <h5>Bill To:</h5>
+                <p>
+                    University Finance Dept.<br />
+                    123 Academic Way<br />
+                    Pretoria, South Africa
+                </p>
+            </div>
+            <div class="col-6 text-end">
+                <h5>Payable To:</h5>
+                <p>
+                    <strong>@lecturer?.FullName</strong><br />
+                    Staff #: @lecturer?.StaffNumber<br />
+                    @lecturer?.Email
+                </p>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th class="text-center">Hours</th>
+                    <th class="text-end">Rate</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.ActivityDescription</td>
+                        <td>@item.Date.ToShortDateString()</td>
+                        <td class="text-center">@item.Hours.ToString("N2")</td>
+                        <td class="text-end">@item.HourlyRate.ToString("C")</td>
+                        <td class="text-end">@item.Amount.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="table-dark">
+                    <td colspan="4" class="text-end border-0"><strong>TOTAL PAYABLE</strong></td>
+                    <td class="text-end border-0"><strong>@Model.TotalAmount.ToString("C")</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="invoice-footer text-center text-muted">
+            <p>This is a computer-generated document. No signature is required.</p>
+            <button onclick="window.print()" class="btn btn-primary d-print-none">Print Invoice</button>
+        </div>
+    </div>
+</body>
+</html>

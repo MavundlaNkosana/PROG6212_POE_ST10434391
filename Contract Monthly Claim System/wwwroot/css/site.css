@@ -1,15 +1,40 @@
-/* ... existing styles ... */
+/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
 
-/* Home Page Specific Styles */
-html, body {
-    height: 100%;
+html {
+    position: relative;
+    min-height: 100%;
 }
 
+body {
+    margin-bottom: 60px;
+    background-color: #f8f9fa;
+}
+
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+/* Home Page Specific Styles */
 .home-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 70vh; /* Adjust as needed */
+    min-height: 70vh;
     text-align: center;
 }
 
@@ -30,6 +55,110 @@ html, body {
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
 
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: .35rem;
+}
+
+.card-header {
+    font-weight: 500;
+}
+
+.btn-success.btn-lg {
+    padding: 12px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* File Upload Section Styling */
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.list-group-item a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+    .list-group-item a:hover {
+        text-decoration: underline;
+    }
+
 .mr-2 {
     margin-right: 0.5rem;
+}
+
+/* UPDATED BADGE STYLES 
+   Changed to use light backgrounds with dark text for better visibility.
+*/
+.badge {
+    display: inline-block;
+    padding: 0.5em 0.75em;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.badge-secondary { /* Draft */
+    color: #383d41;
+    background-color: #e2e3e5;
+    border: 1px solid #d6d8db;
+}
+
+.badge-primary { /* Submitted */
+    color: #004085;
+    background-color: #cce5ff;
+    border: 1px solid #b8daff;
+}
+
+.badge-info { /* Under Review */
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+}
+
+.badge-success { /* Approved */
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.badge-danger { /* Rejected */
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.badge-light { /* Default */
+    color: #818182;
+    background-color: #fefefe;
+    border: 1px solid #fdfdfe;
 }
